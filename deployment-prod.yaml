@@ -10,7 +10,7 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    path:  /srv/nfs/roseaw         #replace with your username here, but don't change this IP as this is the file server.
+    path:  /srv/nfs/chhetrrb         #replace with your username here, but don't change this IP as this is the file server.
     server: 10.48.228.25
   persistentVolumeReclaimPolicy: Retain
 ---
@@ -48,7 +48,7 @@ spec:
         - name: roseaw-dockerhub
       containers:
         - name: flask
-          image: cithit/roseaw:latest    #your MiamiID
+          image: cithit/chhetrrb:latest    #your MiamiID
           ports:
             - containerPort: 5000
           volumeMounts:
@@ -65,7 +65,7 @@ metadata:
   name: flask-prod-service
 spec:
   type: LoadBalancer 
-  loadBalancerIP: 10.48.229.45        #update with your load balancer IP                             
+  loadBalancerIP: 10.48.229.57        #update with your load balancer IP                             
   ports:
   - protocol: TCP
     port: 80
