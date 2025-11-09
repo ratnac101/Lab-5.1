@@ -5,7 +5,7 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'roseaw-dockerhub'  
         DOCKER_IMAGE = 'cithit/chhetrrb'                                   //<-----change this to your MiamiID!
         IMAGE_TAG = "build-${BUILD_NUMBER}"
-        GITHUB_URL = 'https://github.com/miamioh-cit/225-lab4-2.git'     //<-----change this to match this new repository!
+        GITHUB_URL = 'https://github.com/ratnac101/225-lab4-2.git'     //<-----change this to match this new repository!
         KUBECONFIG = credentials('chhetrrb-225')                           //<-----change this to match your kubernetes credentials (MiamiID-225)! 
     }
 
@@ -56,7 +56,7 @@ pipeline {
                 sh '''
                     docker run --user $(id -u) -v ${WORKSPACE}:${WORKSPACE}:rw \
                     -e HOME=${WORKSPACE} \
-                    -e BURP_START_URL=http://10.48.229.158 \
+                    -e BURP_START_URL=http://10.48.229.154 \
                     -e BURP_REPORT_FILE_PATH=${WORKSPACE}/dastardly-report.xml \
                     public.ecr.aws/portswigger/dastardly:latest
                 '''
