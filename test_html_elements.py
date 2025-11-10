@@ -15,7 +15,7 @@ class TestContacts(unittest.TestCase):
 
     def test_contacts(self):
         driver = self.driver
-        driver.get("http://10.43.252.39")  # Replace with your target website (your 'dev' site/clusterIP)
+        driver.get("http://10.48.229.154")  # Replace with your target website (your 'dev' site/clusterIP)
         
         # Check for the presence of all 10 test contacts
         for i in range(10):
