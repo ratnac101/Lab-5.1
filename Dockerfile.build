@@ -1,33 +1,21 @@
-# Dockerfile.build — runtime image for the Flask app
 FROM python:3.9-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# Install dependencies
+RUN apt-get clean && apt-get -y update && apt-get -y install nginx python3-dev build-essential nfs-common && rm -rf /var/lib/apt/lists/*
 
-# Only what you need at runtime
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      nfs-common \
-    && rm -rf /var/lib/apt/lists/*
+# Create mount point for NFS
+RUN mkdir -p /nfs
 
-# App user + dirs
-RUN useradd -m -u 10001 app && mkdir -p /app /nfs && chown -R app:app /app /nfs
-WORKDIR /app
+COPY /data/demo.db /nfs
 
-# Install deps (better layer caching)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the app
+# Copy application files
 COPY . .
 
-# Do NOT COPY a database; NFS will be mounted to /nfs in Kubernetes
+# Install Python dependencies
+RUN pip install -r requirements1.txt
+
+# Expose port 5000 for the application
 EXPOSE 5000
-USER app
 
-# If your Flask app exposes app = Flask(...)
-# Option A: simple (works with your main.py)
-CMD ["python", "main.py"]
-
-# Option B (recommended): gunicorn — uncomment and ensure gunicorn is in requirements.txt
-# CMD ["gunicorn", "-b", "0.0.0.0:5000", "main:app"]
+# Command to run the application
+CMD ["python3", "main.py"] 
