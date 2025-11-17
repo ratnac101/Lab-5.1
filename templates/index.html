@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Lab 5.1 – Contacts CI/CD Demo</title>
+    <title>Lab 5.1 – CI/CD Contacts Dashboard</title>
 
     <!-- Fonts (branding) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,25 +14,66 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
   </head>
-  <body class="bg-body-tertiary">
+  <body class="lab-body">
 
-    <!-- Top bar -->
-    <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm mb-4">
-      <div class="container">
-        <div class="d-flex align-items-center gap-2">
-          <div class="lab-pill">Lab 5.1</div>
-          <div>
-            <div class="miami-title mb-0">CI/CD Flask + SQLite Contacts</div>
-            <div class="miami-subtitle">by Ratna Chhetri</div>
+    <!-- HERO / PIPELINE SUMMARY -->
+    <header class="lab-hero border-bottom">
+      <div class="container py-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="lab-pill">Lab 5.1</div>
+            <div>
+              <div class="miami-title mb-1">CI/CD Flask + SQLite Contacts</div>
+              <div class="miami-subtitle">
+                by Ratna Chhetri · built, tested & deployed via Jenkins
+              </div>
+            </div>
+          </div>
+          <div class="lab-pipeline-legend d-none d-md-flex gap-2 align-items-center">
+            <span class="badge rounded-pill text-bg-light">Build</span>
+            <span class="lab-pipe-dot"></span>
+            <span class="badge rounded-pill text-bg-light">Static & Dynamic Tests</span>
+            <span class="lab-pipe-dot"></span>
+            <span class="badge rounded-pill text-bg-light">Deploy DEV</span>
+            <span class="lab-pipe-dot"></span>
+            <span class="badge rounded-pill text-bg-light">Deploy PROD</span>
           </div>
         </div>
-        <span class="badge rounded-pill text-bg-light d-none d-md-inline-flex">
-          Pipeline: build → test → deploy
-        </span>
-      </div>
-    </nav>
 
-    <main class="container pb-5">
+        <!-- Stat cards -->
+        <div class="row g-3 mt-3">
+          <div class="col-md-4">
+            <div class="lab-stat-card">
+              <div class="lab-stat-label">Total Contacts</div>
+              <div class="lab-stat-value">{{ total }}</div>
+              <div class="lab-stat-caption">Backed by persistent SQLite on NFS.</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="lab-stat-card">
+              <div class="lab-stat-label">Current Page</div>
+              <div class="lab-stat-value">{{ page }} / {{ pages }}</div>
+              <div class="lab-stat-caption">
+                Pagination is handled server-side in Flask.
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="lab-stat-card">
+              <div class="lab-stat-label">Pipeline Snapshot</div>
+              <div class="lab-stat-caption mb-1">
+                Static HTML lint, DAST security scan, Selenium UI tests,
+                then deploy to DEV/PROD.
+              </div>
+              <span class="badge lab-env-badge">Current view: DEV cluster IP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="container lab-main pb-5">
 
       <!-- Flash messages -->
       {% with msgs = get_flashed_messages(with_categories=True) %}
@@ -42,7 +83,7 @@
               {% set bs = 'success' if category=='success'
                            else 'danger' if category=='danger'
                            else 'primary' %}
-              <div class="alert alert-{{ bs }} alert-dismissible fade show" role="alert">
+              <div class="alert alert-{{ bs }} alert-dismissible fade show shadow-sm" role="alert">
                 {{ m }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
@@ -53,14 +94,14 @@
 
       <div class="row g-4 align-items-start">
 
-        <!-- Left column: add contact + summary -->
+        <!-- LEFT: Add contact -->
         <section class="col-lg-4">
-          <div class="card shadow-sm border-0 mb-3">
+          <div class="card shadow-sm border-0 lab-card">
             <div class="card-body">
               <h2 class="h5 mb-1">Add Contact</h2>
               <p class="text-secondary small mb-3">
-                Use this panel to add a new contact. Changes are written to the
-                persistent SQLite database mounted on NFS.
+                Use this form to add a new record to the contacts table.
+                Jenkins uses this same code path when it generates test data.
               </p>
 
               <form method="POST" action="{{ url_for('index') }}" class="row g-3">
@@ -89,32 +130,27 @@
             </div>
           </div>
 
-          <div class="card shadow-sm border-0">
+          <div class="card shadow-sm border-0 lab-card mt-3">
             <div class="card-body small">
-              <h3 class="h6 mb-2">Dataset snapshot</h3>
-              <p class="mb-1">
-                <strong>{{ total }}</strong> contact{{ 's' if total != 1 else '' }} stored.
-              </p>
-              <p class="mb-1">
-                Page <strong>{{ page }}</strong> of <strong>{{ pages }}</strong>.
-              </p>
-              <p class="text-secondary mb-0">
-                This environment is used by the Jenkins pipeline for data
-                generation, Selenium tests, and cleanup.
-              </p>
+              <h3 class="h6 mb-2">How this page fits the pipeline</h3>
+              <ul class="mb-0 ps-3 lab-pipeline-list">
+                <li>HTML is linted in the <strong>Static Code Testing</strong> stage.</li>
+                <li>Test contacts (<code>Test Name N</code>) are injected by a Python script.</li>
+                <li>Selenium checks that all generated contacts appear in this table.</li>
+              </ul>
             </div>
           </div>
         </section>
 
-        <!-- Right column: table + search + pagination -->
+        <!-- RIGHT: Table + search + pagination -->
         <section class="col-lg-8">
 
           <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
             <div>
               <h2 class="h5 mb-1">All Contacts</h2>
               <p class="text-secondary small mb-0">
-                Filter, edit, or delete contacts below. The table contents are
-                what the acceptance tests verify.
+                Filter, edit, or delete contacts below. This is the same dataset
+                that lives in <code>/nfs/demo.db</code> on the cluster.
               </p>
             </div>
             <div class="contacts-toolbar d-flex gap-2">
@@ -127,7 +163,7 @@
             </div>
           </div>
 
-          <div class="card shadow-sm border-0 mb-3">
+          <div class="card shadow-sm border-0 lab-card mb-3">
             <div class="table-responsive">
               <table class="table align-middle mb-0 table-hover contacts-table">
                 <thead class="table-light">
@@ -217,8 +253,8 @@
       </div>
     </main>
 
-    <footer class="py-3 text-center text-secondary small border-top bg-white">
-      &copy; {{ 2025 }} Ratna Chhetri · Lab 5.1 CI/CD Demo
+    <footer class="py-3 text-center text-secondary small lab-footer">
+      &copy; {{ 2025 }} Ratna Chhetri · Lab 5.1 CI/CD Contacts Demo
     </footer>
 
     <!-- Edit Modal -->
