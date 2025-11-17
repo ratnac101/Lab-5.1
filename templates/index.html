@@ -10,18 +10,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <!-- Bootstrap + custom styles -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
   </head>
-  <body>
-    <div class="container">
+  <body class="bg-body-tertiary">
 
-      <header class="mb-4 py-3 border-bottom d-flex align-items-center">
-        <div>
-          <div class="miami-title">Lab 5.1 – CI/CD Flask + SQLite</div>
-          <div class="miami-subtitle">by Ratna Chhetri</div>
+    <!-- Top bar -->
+    <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm mb-4">
+      <div class="container">
+        <div class="d-flex align-items-center gap-2">
+          <div class="lab-pill">Lab 5.1</div>
+          <div>
+            <div class="miami-title mb-0">CI/CD Flask + SQLite Contacts</div>
+            <div class="miami-subtitle">by Ratna Chhetri</div>
+          </div>
         </div>
-      </header>
+        <span class="badge rounded-pill text-bg-light d-none d-md-inline-flex">
+          Pipeline: build → test → deploy
+        </span>
+      </div>
+    </nav>
+
+    <main class="container pb-5">
 
       <!-- Flash messages -->
       {% with msgs = get_flashed_messages(with_categories=True) %}
@@ -40,110 +51,175 @@
         {% endif %}
       {% endwith %}
 
-      <!-- Add form -->
-      <div class="card shadow-sm form-card mb-4">
-        <div class="card-body">
-          <h2 class="h5 mb-3">Add Contact</h2>
-          <form method="POST" action="{{ url_for('index') }}" class="row g-3">
-            <input type="hidden" name="action" value="add">
-            <div class="col-md-6">
-              <label for="name" class="form-label">Name</label>
-              <input class="form-control" id="name" name="name" required>
-            </div>
-            <div class="col-md-6">
-              <label for="phone" class="form-label">Phone</label>
-              <input class="form-control" id="phone" name="phone" required
-                     pattern="^[0-9()+\\-\\s]+$" title="Digits, spaces, (), - and + only">
-            </div>
-            <div class="col-12">
-              <button class="btn btn-primary" type="submit">Add Contact</button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <div class="row g-4 align-items-start">
 
-      <!-- Search + heading -->
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h2 class="h5 m-0">All Contacts</h2>
-        <input id="filter" class="form-control" style="max-width: 280px;" placeholder="Search…">
-      </div>
+        <!-- Left column: add contact + summary -->
+        <section class="col-lg-4">
+          <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+              <h2 class="h5 mb-1">Add Contact</h2>
+              <p class="text-secondary small mb-3">
+                Use this panel to add a new contact. Changes are written to the
+                persistent SQLite database mounted on NFS.
+              </p>
 
-      <!-- Contacts table -->
-      <div class="card shadow-sm mb-3">
-        <div class="table-responsive">
-          <table class="table align-middle mb-0 table-striped">
-            <thead>
-              <tr>
-                <th style="width: 8ch">ID</th>
-                <th style="width: 50%">Name</th>
-                <th style="width: 30%">Phone</th>
-                <th class="text-end" style="width: 12%">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="rows">
-              {% for c in contacts %}
-              <tr>
-                <td class="id text-secondary">{{ c['id'] }}</td>
-                <td class="name">{{ c['name'] }}</td>
-                <td class="phone text-nowrap">{{ c['phone'] }}</td>
-                <td class="text-end">
-                  <div class="d-inline-flex gap-2">
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-secondary"
-                      data-bs-toggle="modal"
-                      data-bs-target="#editModal"
-                      data-id="{{ c['id'] }}"
-                      data-name="{{ c['name'] }}"
-                      data-phone="{{ c['phone'] }}"
-                    >Edit</button>
+              <form method="POST" action="{{ url_for('index') }}" class="row g-3">
+                <input type="hidden" name="action" value="add">
+                <div class="col-12">
+                  <label for="name" class="form-label">Name</label>
+                  <input class="form-control" id="name" name="name" required>
+                </div>
+                <div class="col-12">
+                  <label for="phone" class="form-label">Phone</label>
+                  <input
+                    class="form-control"
+                    id="phone"
+                    name="phone"
+                    required
+                    pattern="^[0-9()+\\-\\s]+$"
+                    title="Digits, spaces, (), - and + only"
+                  >
+                </div>
+                <div class="col-12 d-grid">
+                  <button class="btn btn-lab-primary" type="submit">
+                    Add Contact
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
 
-                    <form method="POST" action="{{ url_for('index') }}" onsubmit="return confirm('Delete this contact?')">
-                      <input type="hidden" name="contact_id" value="{{ c['id'] }}">
-                      <input type="hidden" name="action" value="delete">
-                      <button class="btn btn-sm btn-outline-danger">Delete</button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
+          <div class="card shadow-sm border-0">
+            <div class="card-body small">
+              <h3 class="h6 mb-2">Dataset snapshot</h3>
+              <p class="mb-1">
+                <strong>{{ total }}</strong> contact{{ 's' if total != 1 else '' }} stored.
+              </p>
+              <p class="mb-1">
+                Page <strong>{{ page }}</strong> of <strong>{{ pages }}</strong>.
+              </p>
+              <p class="text-secondary mb-0">
+                This environment is used by the Jenkins pipeline for data
+                generation, Selenium tests, and cleanup.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right column: table + search + pagination -->
+        <section class="col-lg-8">
+
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div>
+              <h2 class="h5 mb-1">All Contacts</h2>
+              <p class="text-secondary small mb-0">
+                Filter, edit, or delete contacts below. The table contents are
+                what the acceptance tests verify.
+              </p>
+            </div>
+            <div class="contacts-toolbar d-flex gap-2">
+              <input
+                id="filter"
+                class="form-control form-control-sm"
+                style="max-width: 260px;"
+                placeholder="Search by name or phone…"
+              >
+            </div>
+          </div>
+
+          <div class="card shadow-sm border-0 mb-3">
+            <div class="table-responsive">
+              <table class="table align-middle mb-0 table-hover contacts-table">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 8ch">ID</th>
+                    <th style="width: 50%">Name</th>
+                    <th style="width: 30%">Phone</th>
+                    <th class="text-end" style="width: 12%">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="rows">
+                  {% for c in contacts %}
+                  <tr>
+                    <td class="id text-secondary">{{ c['id'] }}</td>
+                    <td class="name fw-semibold">{{ c['name'] }}</td>
+                    <td class="phone text-nowrap">{{ c['phone'] }}</td>
+                    <td class="text-end">
+                      <div class="d-inline-flex gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-secondary"
+                          data-bs-toggle="modal"
+                          data-bs-target="#editModal"
+                          data-id="{{ c['id'] }}"
+                          data-name="{{ c['name'] }}"
+                          data-phone="{{ c['phone'] }}"
+                        >Edit</button>
+
+                        <form
+                          method="POST"
+                          action="{{ url_for('index') }}"
+                          onsubmit="return confirm('Delete this contact?')"
+                        >
+                          <input type="hidden" name="contact_id" value="{{ c['id'] }}">
+                          <input type="hidden" name="action" value="delete">
+                          <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not contacts %}
+                  <tr>
+                    <td colspan="4" class="text-center text-secondary py-4">
+                      No contacts found.
+                    </td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <nav
+            aria-label="Contacts pagination"
+            class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+          >
+            <div class="text-secondary small">
+              Page <strong>{{ page }}</strong> of <strong>{{ pages }}</strong> · {{ total }} total
+            </div>
+            <ul class="pagination mb-0">
+              <li class="page-item {% if not has_prev %}disabled{% endif %}">
+                <a class="page-link"
+                   href="{{ url_for('index', page=page-1, per=per_page) if has_prev else '#' }}">
+                  Previous
+                </a>
+              </li>
+              {% for p in range(start_page, end_page + 1) %}
+              <li class="page-item {% if p==page %}active{% endif %}">
+                <a class="page-link"
+                   href="{{ url_for('index', page=p, per=per_page) }}">
+                  {{ p }}
+                </a>
+              </li>
               {% endfor %}
-              {% if not contacts %}
-              <tr>
-                <td colspan="4" class="text-center text-secondary py-4">
-                  No contacts found.
-                </td>
-              </tr>
-              {% endif %}
-            </tbody>
-          </table>
-        </div>
+              <li class="page-item {% if not has_next %}disabled{% endif %}">
+                <a class="page-link"
+                   href="{{ url_for('index', page=page+1, per=per_page) if has_next else '#' }}">
+                  Next
+                </a>
+              </li>
+            </ul>
+          </nav>
+
+        </section>
       </div>
+    </main>
 
-      <!-- Pagination -->
-      <nav aria-label="Contacts pagination" class="d-flex justify-content-between align-items-center">
-        <div class="text-secondary small">
-          Page <strong>{{ page }}</strong> of <strong>{{ pages }}</strong> · {{ total }} total
-        </div>
-        <ul class="pagination mb-0">
-          <li class="page-item {% if not has_prev %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('index', page=page-1, per=per_page) if has_prev else '#' }}">Previous</a>
-          </li>
-          {% for p in range(start_page, end_page + 1) %}
-          <li class="page-item {% if p==page %}active{% endif %}">
-            <a class="page-link" href="{{ url_for('index', page=p, per=per_page) }}">{{ p }}</a>
-          </li>
-          {% endfor %}
-          <li class="page-item {% if not has_next %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('index', page=page+1, per=per_page) if has_next else '#' }}">Next</a>
-          </li>
-        </ul>
-      </nav>
-
-      <footer class="py-4 text-center text-secondary small">
-        &copy; {{ 2025 }} Ratna Chhetri
-      </footer>
-
-    </div> <!-- end .container -->
+    <footer class="py-3 text-center text-secondary small border-top bg-white">
+      &copy; {{ 2025 }} Ratna Chhetri · Lab 5.1 CI/CD Demo
+    </footer>
 
     <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
@@ -162,18 +238,25 @@
             </div>
             <div class="col-12">
               <label class="form-label">Phone</label>
-              <input class="form-control" name="phone" id="edit-phone" required
-                     pattern="^[0-9()+\\-\\s]+$" title="Digits, spaces, (), - and + only">
+              <input
+                class="form-control"
+                name="phone"
+                id="edit-phone"
+                required
+                pattern="^[0-9()+\\-\\s]+$"
+                title="Digits, spaces, (), - and + only"
+              >
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
-            <button class="btn btn-primary" type="submit">Save changes</button>
+            <button class="btn btn-lab-primary" type="submit">Save changes</button>
           </div>
         </form>
       </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>
